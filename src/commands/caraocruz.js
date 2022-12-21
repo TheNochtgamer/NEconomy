@@ -71,7 +71,7 @@ module.exports = {
             Ganaste +${intoBal(balance)}!`);
             myWallet.addBal(balance * 2);
         } else {
-            embed.setDescription(`Elegiste ${lado ? 'cara' : 'cruz'}
+            embed.setDescription(`Elegiste ${lado ? 'cruz' : 'cara'}
             y la moneda cayo del lado de ${moneda.msg}
             Perdiste -${intoBal(balance)}!`);
         }

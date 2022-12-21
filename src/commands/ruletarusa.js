@@ -50,14 +50,14 @@ module.exports = {
             }
         }
 
-        // if (otherMember.user?.bot) {
-        //     await interaction.reply({ 'content': 'No podes desafiar a un bot' });
-        //     return;
-        // }
-        // if (otherMember.id === member.id) {
-        //     await interaction.reply({ 'content': `No te podes desafiar a tu mismo` });
-        //     return;
-        // }
+        if (otherMember.user?.bot) {
+            await interaction.reply({ 'content': 'No podes desafiar a un bot' });
+            return;
+        }
+        if (otherMember.id === member.id) {
+            await interaction.reply({ 'content': `No te podes desafiar a tu mismo` });
+            return;
+        }
         if (config.minBalRuletaRusa > balance) {
             await interaction.reply({ 'content': `El minimo de apuesta es ${config.minBalRuletaRusa}` });
             return;
@@ -66,7 +66,26 @@ module.exports = {
             await interaction.reply({ 'content': 'No tenes dinero suficiente para apostar' });
             return;
         }
-        if (otherMember.wallet?.balance < balance || !otherMember.wallet) {
+
+        if (!otherMember.wallet) {
+            try {
+                await sequelize.authenticate();
+                let hasWallet = await Wallet.findOne({
+                    where: {
+                        user_id: otherMember.id
+                    },
+                    raw: true
+                });
+
+                otherMember.wallet = new WalletDAO(otherMember.id, hasWallet?.balance || 0);
+                myWallet = otherMember.wallet;
+            } catch (error) {
+                console.log(`[${__filename}] Hubo un error con la base de datos:`, error);
+                return;
+            }
+        }
+
+        if (otherMember.wallet?.balance < balance) {
             await interaction.reply({ 'content': 'EL usuario que desafiaste no tiene dinero suficiente' });
             return;
         }
@@ -83,7 +102,7 @@ module.exports = {
 
         try {
             button = await reply.awaitMessageComponent({
-                'filter': i => i.user.id === member.id || i.user.id == otherMember.id,
+                'filter': i => (i.customId == 'deny' && i.user.id === member.id || i.user.id == otherMember.id) || (i.customId == 'accept' && i.user.id == otherMember.id),
                 'time': config.ruletaRusaIdleTimeoutS * 1000
             });
         } catch (error) {
@@ -91,7 +110,7 @@ module.exports = {
             await interaction.editReply({ 'embeds': [embed], 'components': [] });
             return;
         }
-        console.log(button)
+        
         if (!button?.isButton()) return;
 
         if (button.customId == 'deny') {
@@ -105,7 +124,7 @@ module.exports = {
             let resultados = { 'win': rand ? member : otherMember, 'lost': rand ? otherMember : member };
             resultados.win.wallet.addBal(balance * 2);
 
-            embed.setDescription(`El sobreviviente es ${resultados.user}.
+            embed.setDescription(`El sobreviviente es ${resultados.win.user}.
             ${resultados.win.user} +${intoBal(balance * 2)}
             ${resultados.lost.user} -${intoBal(balance)}`);
             await interaction.editReply({ 'embeds': [embed], 'components': [] });

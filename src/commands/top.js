@@ -18,7 +18,7 @@ module.exports = {
             .setAuthor({ 'name': interaction.guild.name })
             .setColor('Green')
             .setTimestamp()
-            .setFooter({'text': 'NEconomy Bot'});
+            .setFooter({ 'text': 'NEconomy Bot' });
         let allWallets;
 
         try {
@@ -38,10 +38,13 @@ module.exports = {
         }
 
         let topDesc = '';
-        allWallets.sort((a, b) => b.balance - a.balance).every((wallet, index) => {
-            let thisUser = client.users.cache.get(wallet.user_id) || wallet.user_id;
-            topDesc = `${index + 1}-${thisUser} ${intoBal(wallet.balance)}`;
-        });
+        allWallets.sort((a, b) => b.balance - a.balance)
+            .every((wallet, index) => {
+                let thisUser = wallet.user_id;
+                topDesc += `${index + 1}-<@${thisUser}> ${intoBal(wallet.balance)}\n`;
+                if (index > 9) return false;
+                return true;
+            });
         embed.setFields({ 'name': '-Top 10-', 'value': topDesc });
 
         await interaction.editReply({ embeds: [embed] });
