@@ -1,0 +1,7 @@
+{
+    "palaTimeout": 30,
+    "picoTimeout": 70,
+    "minBalCaraoCruz": 100,
+    "minBalRuletaRusa": 100,
+    "ruletaRusaIdleTimeoutS": 30
+}
